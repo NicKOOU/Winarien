@@ -1,0 +1,33 @@
+version: '3.1'
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: my-mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: winarien
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3306:3306"
+    networks:
+      - my-network
+
+  winarien:
+    build:
+      context: ./getAllMatch
+      dockerfile: Dockerfile-getAllMatch.yml
+    container_name: winarien-container
+    ports:
+      - "3000:3000"
+    networks:
+      - my-network
+    depends_on:
+      - mysql
+    restart: on-failure
+    
+
+networks:
+  my-network:
+    driver: bridge
