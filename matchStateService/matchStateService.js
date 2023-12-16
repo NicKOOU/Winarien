@@ -20,18 +20,16 @@ client.on('connect', function () {
     console.log('Connected!');
 });
 
-client.subscribe('match-updates');
-
-client.on('message', async (channel, message) => {
+client.subscribe('match-updates', (message, channel) => {
     console.log(`Message reçu de ${channel}: ${message}`);
 
     try {
         const matchUpdate = JSON.parse(message);
-        await handleMatchUpdate(matchUpdate);
+        handleMatchUpdate(matchUpdate).then(console.log("updated"))
     } catch (error) {
         console.error('Error parsing match update message:', error);
     }
-});
+})
 
 const handleMatchUpdate = async (matchUpdate) => {
     const { matchId, newStatus } = matchUpdate;
