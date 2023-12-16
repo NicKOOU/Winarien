@@ -6,13 +6,15 @@ const app = express();
 
 app.use(bodyParser.json());
 
-console.log("test")
-const client = redis.createClient(
-    6379,
-    'redis'
-);
+const client = redis.createClient({
+    socket: {
+        host: 'redis',
+        port: 6379
+    }
+});
 
-console.log(client)
+client.connect().then(console.log("connected"))
+
 
 client.on('connect', function () {
     console.log('Connected!');
