@@ -1,4 +1,4 @@
-version: '3.1'
+version: "3.1"
 
 services:
   mysql:
@@ -13,6 +13,22 @@ services:
       - "3306:3306"
     networks:
       - my-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "admin",
+          "-padmin",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command: ["--default-authentication-plugin=caching_sha2_password"]
 
   redis:
     image: redis:latest
@@ -23,18 +39,18 @@ services:
       - my-network
     restart: on-failure
 
-  winarien:
+  match-all:
     build:
       context: ./getAllMatch
       dockerfile: Dockerfile-getAllMatch.yml
-    container_name: winarien-container
+    container_name: matchAll-container
     ports:
       - "3000:3000"
     networks:
       - my-network
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
     restart: on-failure
 
   match-state:
@@ -47,8 +63,8 @@ services:
     networks:
       - my-network
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
     restart: on-failure
 
   generate-matches:
@@ -61,11 +77,9 @@ services:
     networks:
       - my-network
     depends_on:
-      - mysql
-      - match-state
-      - redis
+      - match-all
+
     restart: on-failure
-    
 
 networks:
   my-network:
