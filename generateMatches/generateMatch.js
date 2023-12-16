@@ -9,7 +9,7 @@ const seedMatchesFromCSV = async (csvFilePath) => {
 
         for (let i = 1; i < rows.length; i++) {
             const [title, competitorId1, competitorId2, startDate, endDate, homeScore, awayScore, status] = rows[i].split(',');
-
+            const cleanedStatus = status.replace(/\r/g, '');
             const [match, created] = await Match.findOrCreate({
                 where: {
                     title,
