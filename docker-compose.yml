@@ -14,6 +14,15 @@ services:
     networks:
       - my-network
 
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+      - my-network
+    restart: on-failure
+
   winarien:
     build:
       context: ./getAllMatch
@@ -25,6 +34,36 @@ services:
       - my-network
     depends_on:
       - mysql
+      - redis
+    restart: on-failure
+
+  match-state:
+    build:
+      context: ./matchStateService
+      dockerfile: Dockerfile-matchStateService.yml
+    container_name: matchState-container
+    ports:
+      - "3001:3001"
+    networks:
+      - my-network
+    depends_on:
+      - mysql
+      - redis
+    restart: on-failure
+
+  generate-matches:
+    build:
+      context: ./generateMatches
+      dockerfile: Dockerfile-generateMatches.yml
+    container_name: generateMatches-container
+    ports:
+      - "3002:3002"
+    networks:
+      - my-network
+    depends_on:
+      - mysql
+      - match-state
+      - redis
     restart: on-failure
     
 
