@@ -77,5 +77,5 @@
 
 - **Nicolas Kourban**
 - **Dominique Zhang**
-- **Eric Lim**
 - **Mike Li**
+- **Henri Sargerson**
