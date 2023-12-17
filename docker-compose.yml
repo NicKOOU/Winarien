@@ -25,8 +25,8 @@ services:
           "admin",
           "-padmin",
         ]
-      interval: 5s
-      timeout: 5s
+      interval: 12s
+      timeout: 40s
       retries: 10
     command: ["--default-authentication-plugin=caching_sha2_password"]
 
