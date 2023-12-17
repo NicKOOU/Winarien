@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const redis = require('redis');
-const { Match } = require('./models/index.js');
+const { Match, Log } = require('./models/index.js');
 const app = express();
 
 app.use(bodyParser.json());
@@ -13,11 +13,20 @@ const client = redis.createClient({
     }
 });
 
-client.connect().then(console.log("connected"))
 
+client.connect().then(() => {
+    console.log('Connected to Redis!');
+});
 
-client.on('connect', function () {
-    console.log('Connected!');
+const clientPublisher = redis.createClient({
+    socket: {
+        host: 'redis',
+        port: 6379
+    }
+});
+
+clientPublisher.connect().then(() => {
+    console.log('Connected to Redis!');
 });
 
 client.subscribe('match-updates', (message, channel) => {
@@ -29,28 +38,36 @@ client.subscribe('match-updates', (message, channel) => {
     } catch (error) {
         console.error('Error parsing match update message:', error);
     }
-})
+});
 
 const handleMatchUpdate = async (matchUpdate) => {
-    const { matchId, newStatus } = matchUpdate;
+    const { matchId, newStatus, homeScore, awayScore } = matchUpdate;
 
     try {
         const match = await Match.findByPk(matchId);
+        let type = '';
 
         if (!match) {
             console.error('Match not found with ID:', matchId);
             return;
         }
 
-        if (newStatus === 'PREMATCH' && match.status === 'NOT STARTED') {
-            match.status = newStatus;
-        } else if (newStatus === 'LIVE' && match.status === 'PREMATCH') {
-            match.status = newStatus;
-        } else if (newStatus === 'ENDED' && match.status === 'LIVE') {
-            match.status = newStatus;
-        } else {
-            console.error(`Invalid state transition from ${match.status} to ${newStatus}`);
-            return;
+        if (newStatus && match.status !== newStatus) {
+            handleStatusChange(match, newStatus);
+            if (newStatus === 'ENDED') {
+                type = 'END';
+                if (newStatus === 'PREMATCH') {
+                    type = 'PREMATCH';
+                }
+                if (newStatus === 'LIVE') {
+                    type = 'START';
+                }
+            }
+        }
+
+        if (homeScore !== undefined && awayScore !== undefined) {
+            handleScoreChange(match, homeScore, awayScore);
+            type = 'SCORE UPDATE';
         }
 
         await match.save();
@@ -58,9 +75,21 @@ const handleMatchUpdate = async (matchUpdate) => {
         const updatedMatch = await Match.findByPk(matchId);
 
         console.log('Match updated successfully:', updatedMatch);
+
+        const logText = `Match updated: Match ${matchId} - Status: ${match.status} - Home Score: ${match.homeScore} - Away Score: ${match.awayScore}`;
+        clientPublisher.publish('match-logs', JSON.stringify({ type: type, matchId: matchId, text: logText }));
     } catch (error) {
         console.error('Error updating match:', error);
     }
+};
+
+const handleStatusChange = (match, newStatus) => {
+    match.status = newStatus;
+};
+
+const handleScoreChange = (match, homeScore, awayScore) => {
+    match.homeScore = homeScore;
+    match.awayScore = awayScore;
 };
 
 const PORT = 3001;

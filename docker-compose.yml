@@ -95,6 +95,45 @@ services:
         condition: service_healthy
     restart: on-failure
 
+  notification-service:
+    build:
+      context: ./notificationService
+      dockerfile: Dockerfile-notificationService.yml
+    container_name: notificationService-container
+    ports:
+      - "3004:3004"
+    networks:
+      - my-network
+    depends_on:
+      - match-state
+    restart: on-failure
+
+  replay-events-service:
+    build:
+      context: ./replayEventsService
+      dockerfile: Dockerfile-replayEventsService.yml
+    container_name: replayEventsService-container
+    ports:
+      - "3005:3005"
+    networks:
+      - my-network
+    depends_on:
+      - notification-service
+    restart: on-failure
+
+  test-match-update:
+    build:
+      context: ./testMatchUpdate
+      dockerfile: Dockerfile-testMatchUpdate.yml
+    container_name: testMatchUpdate-container
+    ports:
+      - "3006:3006"
+    networks:
+      - my-network
+    depends_on:
+      - notification-service
+    restart: on-failure
+
 networks:
   my-network:
     driver: bridge
