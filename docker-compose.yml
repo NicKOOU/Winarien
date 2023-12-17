@@ -39,7 +39,7 @@ services:
       - my-network
     restart: on-failure
 
-  match-all:
+  get-all-match:
     build:
       context: ./getAllMatch
       dockerfile: Dockerfile-getAllMatch.yml
@@ -77,7 +77,7 @@ services:
     networks:
       - my-network
     depends_on:
-      - match-all
+      - get-all-match
 
     restart: on-failure
 

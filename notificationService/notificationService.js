@@ -9,6 +9,17 @@ const client = redis.createClient({
     }
 });
 
+const UserClientTest = redis.createClient({
+    socket: {
+        host: 'redis',
+        port: 6379
+    }
+});
+
+UserClientTest.connect().then(() => {
+    console.log('Connected to Redis!');
+});
+
 client.connect().then(() => {
     console.log('Connected to Redis!');
 });
@@ -50,18 +61,11 @@ client.subscribe('match-logs', async (message, channel) => {
             recipients: favoriteMatchesUp.map(favoriteMatch => favoriteMatch.userId),
         });
 
-        if (type === 'MATCH_UPDATE' || type === 'SCORE_UPDATE') {
-            const matchId = text.split(' ')[2];
+        if (type === 'START' || type === 'END' || type === 'SCORE UPDATE' || type === 'PREMATCH') {
             const favoriteMatches = await FavoriteMatch.findAll({ where: { matchId } });
             const users = favoriteMatches.map(favoriteMatch => favoriteMatch.userId);
-
             for (const user of users) {
                 clientPublisher.publish('notifications', JSON.stringify({ type, recipients: [user], text }));
-
-                await LogRecipient.create({
-                    LogId: log.id,
-                    UserId: user,
-                });
             }
         }
 
@@ -69,4 +73,8 @@ client.subscribe('match-logs', async (message, channel) => {
     } catch (error) {
         console.error('Error processing Redis message:', error);
     }
+});
+
+UserClientTest.subscribe('notifications', async (message, channel) => {
+    console.log(`Message reçu de ${channel}: ${message}`);
 });

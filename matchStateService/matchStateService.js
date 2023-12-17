@@ -43,6 +43,8 @@ client.subscribe('match-updates', (message, channel) => {
 const handleMatchUpdate = async (matchUpdate) => {
     const { matchId, newStatus, homeScore, awayScore } = matchUpdate;
 
+    console.log('Updating match:', matchUpdate);
+
     try {
         const match = await Match.findByPk(matchId);
         let type = '';
@@ -56,12 +58,12 @@ const handleMatchUpdate = async (matchUpdate) => {
             handleStatusChange(match, newStatus);
             if (newStatus === 'ENDED') {
                 type = 'END';
-                if (newStatus === 'PREMATCH') {
-                    type = 'PREMATCH';
-                }
-                if (newStatus === 'LIVE') {
-                    type = 'START';
-                }
+            }
+            if (newStatus === 'PREMATCH') {
+                type = 'PREMATCH';
+            }
+            if (newStatus === 'LIVE') {
+                type = 'START';
             }
         }
 
@@ -75,7 +77,7 @@ const handleMatchUpdate = async (matchUpdate) => {
         const updatedMatch = await Match.findByPk(matchId);
 
         console.log('Match updated successfully:', updatedMatch);
-
+        console.log('type', type)
         const logText = `Match updated: Match ${matchId} - Status: ${match.status} - Home Score: ${match.homeScore} - Away Score: ${match.awayScore}`;
         clientPublisher.publish('match-logs', JSON.stringify({ type: type, matchId: matchId, text: logText }));
     } catch (error) {
