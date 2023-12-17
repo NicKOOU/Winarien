@@ -4,6 +4,11 @@ const db = require('./models/index.js');
 const Match = db.Match;
 const { Op } = require("sequelize");
 
+db.sequelize.sync().then(() => {
+    console.log('Database connected');
+}).catch((error) => {
+    console.error('Error connecting to the database:', error);
+});
 
 const app = express();
 app.use(bodyParser.json());

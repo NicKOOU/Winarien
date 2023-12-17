@@ -28,7 +28,11 @@ Log.belongsToMany(User, {
     through: 'LogRecipients',
 });
 
-db.sequelize.sync();
+db.sequelize.sync().then(() => {
+    console.log('Database connected');
+}).catch((error) => {
+    console.error('Error connecting to the database:', error);
+});
 
 client.subscribe('match-logs', async (message, channel) => {
     try {

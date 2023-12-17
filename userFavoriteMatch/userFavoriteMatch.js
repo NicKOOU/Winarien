@@ -18,7 +18,11 @@ FavoriteMatch.belongsTo(User, {
     foreignKey: 'userId',
 });
 
-db.sequelize.sync();
+db.sequelize.sync().then(() => {
+    console.log('Database connected');
+}).catch((error) => {
+    console.error('Error connecting to the database:', error);
+});
 
 
 app.use(bodyParser.json());
