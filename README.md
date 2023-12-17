@@ -78,4 +78,4 @@
 - **Nicolas Kourban**
 - **Dominique Zhang**
 - **Mike Li**
-- **Henri Sargerson**
+- **Henry Sargerson**
